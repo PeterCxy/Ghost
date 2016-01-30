@@ -16,6 +16,7 @@ script:
 after_success:
   if [ ! -z "$TRAVIS_TAG" ]; then
     grunt release
+    ls -a dist-folder/*/
   fi
 deploy:
   provider: releases
