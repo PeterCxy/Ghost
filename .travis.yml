@@ -1,48 +1,25 @@
 language: node_js
 # When changing node version also update it on lines 26, 28 and 38.
 node_js:
-  - "0.10"
-  - "0.12"
   - "4.2"
-sudo: false
+sudo: true
 cache:
   directories:
     - node_modules
     - core/client/node_modules
     - core/client/bower_components
-addons:
-  postgresql: "9.3"
-env:
-  global:
-    - GITHUB_OAUTH_KEY=003a44d58f12089d0c0261338298af3813330949
-    - GHOST_NODE_VERSION_CHECK=false
-    - TEST_SUITE=server
-  matrix:
-    - DB=sqlite3 NODE_ENV=testing
-    - DB=mysql NODE_ENV=testing-mysql
-    - DB=pg NODE_ENV=testing-pg
-matrix:
-  include:
-    - node_js: "0.10"
-      env: TEST_SUITE=client
-    - node_js: "0.10"
-      env: TEST_SUITE=lint
-before_install:
-  - if [ $DB == "mysql" ]; then mysql -e 'create database ghost_testing'; fi
-  - if [ $DB == "pg" ]; then psql -c 'create database ghost_testing;' -U postgres; fi
 before_script:
-  - phantomjs --version
-after_success:
-  - |
-      if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
-        if [[ "$DB" = "sqlite3" && "$TRAVIS_NODE_VERSION" = "0.10" ]]; then
-          echo "Generate coverage..."
-          grunt coverage
-          npm install -g codeclimate-test-reporter
-          codeclimate-test-reporter < core/test/coverage/unit/lcov.info
-        else
-          echo "False DB and NODE_VERSION. No coverage generated."
-        fi
-      else
-        echo "This is a PR. No coverage generated."
-      fi
+  - npm install -g grunt-cli
+script:
+  - npm install
+  - grunt init
+  - grunt prod
+  - grunt release
+deploy:
+  provider: releases
+  api_key:
+      secure: "2o5I2VHY5neNfi51zYsEFyrfMZbjzAgjvai3w0POfL+8S/vM1/Ov0EiLViwZMl77flzxFHBbqJjJy4HZ4gHGEvHhmywS3YjBnNbp6OnIwof7DGsTVtuV2DIwr/VjUrXvrkdNEbhltuhkAFERXaMyx28wnnRIwT78tHs+iWEvt32uHmhghy6qR5qKZn3vtxft0ycRs3n2H2zhpGen4ubz23VpfeH9z09c0C0FBIATCLvtOMIBzHQWMaZ+e3DF6kGUOJWbsWu+YK7hUStElH8SP6hiHgAkBBYipQW1vDhX/6VSV1tfqd+mpbHc1hNE8tgDOvfdA26PrhLbj45Bqom7Ofsm3oxzBpQRWcR9WGdanyqh4YMo1E50Ock2QDvyXvBWNKlQpmdsAUgG3Kb6jZfW5S8e81enTSdD8OpNIWmH/8A3BUsHLZvtRaV5qKVM3KmYjgC3K6SutTUa51XdpEz+Tr51gpDmIrHigowegUCby3yRTY8zFGFKjEEk2Sz4mVAOonsdEw7E0NhVQzneS1NnETytZsPADPN6MIDDip9/3hNJ9lgXEQLSX0Gsr0dyfgkfadoQXY9SrMo/Hk5s1iPEuNCM6axxw4ErdjKGOnjt++0UxfB7aQWMn56lm8iKDF6SfHcRtv9+KwgvA12/4aN/e0gB367HEd613a1nmM+DffU="
+  file: dist-folder/*/*.zip
+  skip_cleanup: true
+  on:
+    tags: true
