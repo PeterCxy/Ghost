@@ -14,9 +14,8 @@ script:
   - grunt init
   - grunt prod
 after_success:
-  if [ ! -z "$TRAVIS_TAG" ]; then
-    grunt release && ls -a dist-folder/*/
-  fi
+  - grunt release
+  - ls -a dist-folder/*/
 deploy:
   provider: releases
   api_key:
